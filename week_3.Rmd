@@ -1,0 +1,283 @@
+---
+title: "week_3"
+author: "Veronica Thompson"
+date: "July 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+```
+
+## Chapter 4  
+
+### 4.4 Practice problems  
+
+#### 4.4.1Keyboard Shortcut Help  
+Why does this code not work?  
+
+```
+my_variable <- 10
+my_varıable
+#> Error in eval(expr, envir, enclos): object 'my_varıable' not found
+```
+
+Look carefully! (This may seem like an exercise in pointlessness, but training your brain to notice even the tiniest difference will pay off when programming.)  
+
+** The same variable name wasn't used (not sure what was used in the place of "i") **  
+
+#### 4.4.2
+Tweak each of the following R commands so that they run correctly:  
+```{r}
+library(tidyverse)
+
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+# not sure what is wrong with this one...
+```
+
+```{r}
+#fliter(mpg, cyl = 8), command name spelled wrong, "==" in place of "=" for logical "is equal too"
+filter(mpg, cyl == 8)
+```
+
+```{r}
+#filter(diamond, carat > 3), the data set is called "diamonds", not "diamond" 
+filter(diamonds, carat >3)
+```
+
+#### 4.4.3  
+Press Alt + Shift + K. What happens? How can you get to the same place using the menus?  
+Alt + Shift + K brings up the keyboard shortcut guide for R! This can also be found under **Tools > Keyboard Shortcut Help**
+
+## Chapter 5  
+
+Assignment:  
+* Read 5.1 - 5.7  
+* Complete the following problems  
+  + 5.2.4 Problems 1.1, 1.4, 1.5, 1.7, 2 and 3  
+  + 5.3.1 Problems 1-4  
+  + 5.4.1 Problems 1-4  
+  + 5.5.2 Problems 1-5  
+  + 5.6.7 Problem 5  
+  
+### 5.2
+
+logical operators  
+```{r}
+#two different ways to filter for multiple values in the same variable
+nov_dec1 <- filter(flights, month == 11 | month ==12)
+nov_dec2 <- filter(flights, month %in% c(11,12))
+```
+
+### 5.5.4 Exercise  
+
+for reference:  
+```{r}
+colnames(flights)
+```
+
+#### 5.2.4.1.1 
+Had an arrival delay of two or more hours  
+```{r}
+ex1.1 <- filter(flights, arr_delay >= 120) #arr_delay is in minutes
+summary(ex1.1$arr_delay) # arr_delay minimum is 120
+```
+
+#### 5.2.4.1.4  
+Departed in summer (July, August, and September)  
+```{r}
+ex1.4.1 = filter(flights, month == 7 | month == 8 | month == 9)
+summary(ex1.4.1$month) # month range is 7-9
+```
+
+```{r}
+#alternate method
+ex1.4.2 = filter(flights, month %in% c(7:9))
+summary(ex1.4.2$month)
+```
+
+#### 5.2.4.1.5  
+Arrived more than two hours late, but didn’t leave late  
+```{r}
+ex1.5 = filter(flights, arr_delay > 120 & dep_delay <= 0)
+summary(ex1.5) #looks good
+```
+
+#### 5.2.4.1.7  
+Departed between midnight and 6am (inclusive)  
+```{r}
+summary(flights$dep_time) #HMM or HHMM format, so I am looking for 2400 (midnight) and before 600 (6 am)
+```
+
+```{r}
+ex1.7 <- filter(flights, dep_time == 2400 | dep_time <= 600 )
+ggplot(ex1.7, aes(x= dep_time)) + geom_histogram(binwidth = 30) # looks good!
+```
+
+#### 5.2.4.2  
+Another useful dplyr filtering helper is between(). What does it do? Can you use it to simplify the code needed to answer the previous challenges?  
+
+From between() help file "This is a shortcut for x >= left & x <= right". For departed in summer problem  
+```{r}
+ex_summer = filter(flights, between(month, 7, 9))
+summary(ex_summer$month)
+```
+
+
+#### 5.2.4.3  
+How many flights have a missing dep_time? What other variables are missing? What might these rows represent?  
+```{r}
+no_depart = filter(flights, is.na(dep_time))
+head(no_depart)
+summary(no_depart)
+```
+It looks like there are NAs for dep_time, dep_delay, arr_time, arr_delay, air_time. These seem like cancelled flights.  
+
+### 5.3 arrange()  
+
+#### 5.3.1.1   
+How could you use arrange() to sort all missing values to the start? (Hint: use is.na()).
+first: check the help file for arrange. it was not helpful!  
+```{r}
+na_first = arrange(flights, desc(is.na(dep_time)))
+dim(flights) == dim(na_first) #same dimensions
+head(na_first) #header looks good
+```
+
+#### 5.3.1.2  
+Sort flights to find the most delayed flights. Find the flights that left earliest.    
+```{r}
+#most delayed departure
+arrange(flights, desc(dep_delay)) %>%
+  head()
+```
+```{r}
+#Earliest departure
+arrange(flights, dep_delay) %>%
+  head() #leaving before they are scheduled!
+```
+
+#### 5.3.1.3  
+Sort flights to find the fastest flights.  
+```{r}
+arrange(flights, air_time) %>%
+  head()
+```
+
+#### 5.3.1.4  
+Which flights travelled the longest? Which travelled the shortest?  
+```{r}
+#shortest distance
+arrange(flights, distance) %>%
+  head()
+```
+
+```{r}
+#longest distance
+arrange(flights, desc(distance)) %>%
+  head() #vacationers got a looooong flight
+```
+
+### 5.4 select()  
+
+#### 5.4.1.1  
+Brainstorm as many ways as possible to select dep_time, dep_delay, arr_time, and arr_delay from flights.  
+```
+select(flights, dep_time, dep_delay, arr_time, arr_delay)
+select(flights, starts_with("dep"), starts_with("arr"))
+select(flights, ends_with("time"), ends_with("delay"), - air_time, - starts_with("sched"))
+select(flights, 4, 6, 7, 9)
+```
+
+#### 5.4.1.2
+What happens if you include the name of a variable multiple times in a select() call?  
+Guess: it will select it twice
+```{r}
+head(select(flights, carrier, flight, carrier))
+# only grabs it the first time it is called.
+```
+
+#### 5.4.1.3  
+What does the one_of() function do? Why might it be helpful in conjunction with this vector?
+```{r}
+vars <- c("year", "month", "day", "dep_delay", "arr_delay")
+select(flights, one_of(vars)) #selects what is in the vector. Seems to be the same as just using "vars".
+#select(flights, vars)
+```
+
+#### 5.4.1.4  
+Does the result of running the following code surprise you? How do the select helpers deal with case by default? How can you change that default?  
+```{r}
+select(flights, contains("TIME"))
+```
+Selected everything that has time in the name, regardless of case. ignore.case is TRUE by default, can be set to FALSE to prevent non-specific matches by case.  
+```{r}
+select(flights, contains("TIME", ignore.case = FALSE))
+```
+
+### 5.5 mutate()  
+
+#### 5.5.2.1
+Currently dep_time and sched_dep_time are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.
+```{r}
+head(transmute(flights,
+                 dep_time,
+                 dep_minutes = dep_time %/% 100 *60 + dep_time %% 100,
+                 sched_dep_minutes = sched_dep_time %/% 100 *60 + sched_dep_time %% 100))
+```
+
+#### 5.5.2.2
+Compare air_time with arr_time - dep_time. What do you expect to see? What do you see? What do you need to do to fix it?  
+```{r}
+head(transmute(flights, 
+               air_time,
+               arr_dep = arr_time - dep_time))
+```
+arr_time and dep_time need to be converted to minutes before calculating, as above.  
+
+#### 5.5.2.3  
+Compare dep_time, sched_dep_time, and dep_delay. How would you expect those three numbers to be related?  
+```{r}
+head(transmute(flights,
+               dep_time,
+               calc_dep_time = sched_dep_time + dep_delay,
+               sched_dep_time,
+               dep_delay))
+```
+This should work for delays under an hour. dep_time and sched_dep_time must be converted as above before calculating calc_dep_time for flights delayed over an hour.  
+
+#### 5.5.2.4
+Find the 10 most delayed flights using a ranking function. How do you want to handle ties? Carefully read the documentation for min_rank().  
+```{r}
+delay_rank = transmute(flights, 
+               flight,
+               delay_ranking = min_rank(desc(dep_delay)),
+               dep_delay) %>%
+  arrange(delay_ranking)
+head(delay_rank, 10)
+```
+Adjust what happens in a tie using (ties.method =  )  
+
+#### 5.5.2.5  
+What does 1:3 + 1:10 return? Why?  
+```
+1:3 + 1:10
+#error: longer object length is not a multiple of shorter object length [1]  2  4  6  5  7  9  8 10 12 11
+```  
+R is unsure how to calculate when two vectors do not match in length or multiples of a length.  
+
+### 5.6 summarise()   
+
+#### 5.6.7.5
+Which carrier has the worst delays? Challenge: can you disentangle the effects of bad airports vs. bad carriers? Why/why not? (Hint: think about flights %>% group_by(carrier, dest) %>% summarise(n())).  
+```{r}
+flights %>%
+  group_by(carrier) %>%
+  summarize(ave_delay = mean(dep_delay, na.rm = TRUE), n= n()) %>%
+  filter(n >= 10000) %>%
+  arrange(desc(ave_delay))
+```
+
