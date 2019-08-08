@@ -278,7 +278,8 @@ Which carrier has the worst delays? Challenge: can you disentangle the effects o
 ```{r}
 flights %>%
   group_by(carrier) %>%
-  summarize(ave_delay = mean(dep_delay, na.rm = TRUE), n= n()) %>%
+  summarize(ave_delay = mean(dep_delay, na.rm = TRUE), 
+            n= n()) %>%
   filter(n >= 10000) %>%
   arrange(desc(ave_delay))
 ```

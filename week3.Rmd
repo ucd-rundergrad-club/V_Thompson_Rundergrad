@@ -1,0 +1,55 @@
+---
+title: "week_3"
+author: "Veronica Thompson"
+date: "July 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Chapter 4
+
+### 4.4 Practice problems
+
+#### 4.4.1Keyboard Shortcut Help
+Why does this code not work?
+
+```
+my_variable <- 10
+my_varıable
+#> Error in eval(expr, envir, enclos): object 'my_varıable' not found
+```
+
+Look carefully! (This may seem like an exercise in pointlessness, but training your brain to notice even the tiniest difference will pay off when programming.)
+
+** The same variable name wasn't used (not sure what was used in the place of "i") **
+
+#### 4.4.2
+Tweak each of the following R commands so that they run correctly:
+
+```{r}
+library(tidyverse)
+
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+# not sure what is wrong with this one...
+```
+
+```{r}
+#fliter(mpg, cyl = 8), command name spelled wrong, "==" in place of "=" for logical "is equal too"
+filter(mpg, cyl == 8)
+```
+
+```{r}
+#filter(diamond, carat > 3), the data set is called "diamonds", not "diamond" 
+filter(diamonds, carat >3)
+```
+
+#### 4.4.3
+Press Alt + Shift + K. What happens? How can you get to the same place using the menus?
+Alt + Shift + K brings up the keyboard shortcut guide for R! This can also be found under **Tools > Keyboard Shortcut Help**
+
+## Cham
