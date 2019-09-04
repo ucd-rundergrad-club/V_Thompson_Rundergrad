@@ -1,0 +1,142 @@
+---
+title: "week_7"
+author: "Veronica Thompson"
+date: "September 3, 2019"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+```
+
+
+### Chapter 13 - Relational data  
+
+* Read 13.1 - 13.7  
+* 13.2.1 Problems 1 - 4  
+* 13.3.1 Problems 1, 2.1, 2.2 (install the correct packages first!)  
+* 13.4.6 Problems 1 and 2  
+* 13.5.1 Problems 2 and 4  
+
+
+Tools for using data from multiple related tables  
+*Mutating joins*  
+*Filtering joins*  
+*Set operations*  
+
+
+The airlines data sets:  
+```
+airlines #airline carrier names by abbreviation 
+airports #airport info, duh
+planes #plane by tailnum
+weather #at NYC airports per hour
+```
+
+#### 13.2.1 Exercises  
+
+*1. Imagine you wanted to draw (approximately) the route each plane flies from its origin to its destination. What variables would you need? What tables would you need to combine?*  
+
+from flights, you need the origin and destination airport  
+from airports, you will need lat and lon for each airport matched by FAA  
+You would use a mutate join!  
+
+*2. I forgot to draw the relationship between weather and airports. What is the relationship and how should it appear in the diagram?*  
+
+```
+weather$origin == airports$faa 
+```  
+
+*3. weather only contains information for the origin (NYC) airports. If it contained weather records for all airports in the USA, what additional relation would it define with flights?*  
+
+weather would also match the destination in flights  
+
+*4. We know that some days of the year are “special”, and fewer people than usual fly on them. How might you represent that data as a data frame? What would be the primary keys of that table? How would it connect to the existing tables?*  
+
+table Special would include the following variables:  
+* Year  
+* Month  
+* Day (connected to the same variables in flights and weather)  
+* number of flights incoming to NYC 
+* number of flights outgoing from NYC 
+
+####13.3.1 Exercises  
+
+*1. Add a surrogate key to flights.*  
+```{r}
+flights2 = flights
+
+flights2$surr_key = 1:nrow(flights2)
+head(flights2)
+```
+
+*2. Identify the keys in the following datasets:*  
+*Lahman::Batting*  
+```{r}
+library(Lahman)
+head(Batting)
+
+Batting %>% count(playerID, yearID, stint) %>% filter(n>1) 
+#this is dumb
+```  
+
+*babynames::babynames*  
+```{r}
+library(babynames)
+head(babynames)
+babynames %>% count(year, name, sex) %>% filter(n>1)
+```  
+
+#### 13.4.6 Exercises  
+
+*1. Compute the average delay by destination, then join on the airports data frame so you can show the spatial distribution of delays. Here’s an easy way to draw a map of the United States:*  
+
+```{r}
+flights2 <- flights %>% 
+  group_by(dest) %>%
+  summarize(delay = mean(dep_delay, na.rm = TRUE))
+head(flights2)
+```
+
+```{r}
+airports %>%
+  right_join(flights2, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat, color = delay)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```  
+
+*2. Add the location of the origin and destination (i.e. the lat and lon) to flights*  
+```{r}
+flights_loc1 <- flights %>%
+  left_join(airports, by = c("origin" = "faa")) %>%
+  left_join(airports, by = c("dest" = "faa")) %>%
+  view()
+
+#then select and clean this up
+```  
+
+#### 13.5.1 Exercises  
+
+*2. Filter flights to only show flights with planes that have flown at least 100 flights.*  
+```{r}
+flights_count = flights %>%
+  count(tailnum) %>%
+  filter(n>100) 
+
+flights_100plus = flights %>%
+  semi_join(flights_count, by = "tailnum")
+
+dim(flights)
+dim(flights_100plus)
+#theres less!
+```  
+
+*4. Find the 48 hours (over the course of the whole year) that have the worst delays. Cross-reference it with the weather data. Can you see any patterns?*  
+
+
